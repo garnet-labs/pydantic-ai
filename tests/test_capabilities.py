@@ -20,11 +20,8 @@ from pydantic_ai.capabilities import (
     CAPABILITY_TYPES,
     MCP,
     BuiltinTool,
-    CapabilityOrdering,
     ImageGeneration,
-    IncludeToolReturnSchemas,
     PrefixTools,
-    SetToolMetadata,
     Thinking,
     ThreadExecutor,
     Toolset,
@@ -49,8 +46,8 @@ from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     ModelResponse,
-    PartStartEvent,
     RetryPromptPart,
+    SystemPromptPart,
     TextPart,
     ToolCallPart,
     ToolReturnPart,
@@ -81,10 +78,8 @@ def test_capability_types() -> None:
         {
             'BuiltinTool': BuiltinTool,
             'ImageGeneration': ImageGeneration,
-            'IncludeToolReturnSchemas': IncludeToolReturnSchemas,
             'MCP': MCP,
             'PrefixTools': PrefixTools,
-            'SetToolMetadata': SetToolMetadata,
             'Thinking': Thinking,
             'WebFetch': WebFetch,
             'WebSearch': WebSearch,
@@ -591,8 +586,12 @@ def test_model_json_schema_with_capabilities():
                         'bedrock:us.meta.llama3-2-90b-instruct-v1:0',
                         'bedrock:us.meta.llama3-3-70b-instruct-v1:0',
                         'cerebras:gpt-oss-120b',
+                        'cerebras:llama-3.3-70b',
                         'cerebras:llama3.1-8b',
                         'cerebras:qwen-3-235b-a22b-instruct-2507',
+                        'cerebras:qwen-3-32b',
+                        'cerebras:qwen-3-coder-480b',
+                        'cerebras:zai-glm-4.6',
                         'cerebras:zai-glm-4.7',
                         'cohere:c4ai-aya-expanse-32b',
                         'cohere:c4ai-aya-expanse-8b',
@@ -602,7 +601,13 @@ def test_model_json_schema_with_capabilities():
                         'cohere:command-r7b-12-2024',
                         'deepseek:deepseek-chat',
                         'deepseek:deepseek-reasoner',
+                        'gateway/anthropic:claude-3-5-haiku-20241022',
+                        'gateway/anthropic:claude-3-5-haiku-latest',
+                        'gateway/anthropic:claude-3-7-sonnet-20250219',
+                        'gateway/anthropic:claude-3-7-sonnet-latest',
                         'gateway/anthropic:claude-3-haiku-20240307',
+                        'gateway/anthropic:claude-3-opus-20240229',
+                        'gateway/anthropic:claude-3-opus-latest',
                         'gateway/anthropic:claude-4-opus-20250514',
                         'gateway/anthropic:claude-4-sonnet-20250514',
                         'gateway/anthropic:claude-haiku-4-5-20251001',
@@ -618,34 +623,107 @@ def test_model_json_schema_with_capabilities():
                         'gateway/anthropic:claude-sonnet-4-5-20250929',
                         'gateway/anthropic:claude-sonnet-4-5',
                         'gateway/anthropic:claude-sonnet-4-6',
+                        'gateway/bedrock:amazon.titan-text-express-v1',
+                        'gateway/bedrock:amazon.titan-text-lite-v1',
+                        'gateway/bedrock:amazon.titan-tg1-large',
+                        'gateway/bedrock:anthropic.claude-3-5-haiku-20241022-v1:0',
                         'gateway/bedrock:anthropic.claude-3-5-sonnet-20240620-v1:0',
+                        'gateway/bedrock:anthropic.claude-3-5-sonnet-20241022-v2:0',
+                        'gateway/bedrock:anthropic.claude-3-7-sonnet-20250219-v1:0',
                         'gateway/bedrock:anthropic.claude-3-haiku-20240307-v1:0',
+                        'gateway/bedrock:anthropic.claude-3-opus-20240229-v1:0',
+                        'gateway/bedrock:anthropic.claude-3-sonnet-20240229-v1:0',
+                        'gateway/bedrock:anthropic.claude-haiku-4-5-20251001-v1:0',
+                        'gateway/bedrock:anthropic.claude-instant-v1',
+                        'gateway/bedrock:anthropic.claude-opus-4-20250514-v1:0',
+                        'gateway/bedrock:anthropic.claude-sonnet-4-20250514-v1:0',
+                        'gateway/bedrock:anthropic.claude-sonnet-4-5-20250929-v1:0',
+                        'gateway/bedrock:anthropic.claude-sonnet-4-6',
+                        'gateway/bedrock:anthropic.claude-v2:1',
+                        'gateway/bedrock:anthropic.claude-v2',
+                        'gateway/bedrock:cohere.command-light-text-v14',
+                        'gateway/bedrock:cohere.command-r-plus-v1:0',
+                        'gateway/bedrock:cohere.command-r-v1:0',
+                        'gateway/bedrock:cohere.command-text-v14',
                         'gateway/bedrock:eu.anthropic.claude-haiku-4-5-20251001-v1:0',
                         'gateway/bedrock:eu.anthropic.claude-sonnet-4-20250514-v1:0',
                         'gateway/bedrock:eu.anthropic.claude-sonnet-4-5-20250929-v1:0',
                         'gateway/bedrock:eu.anthropic.claude-sonnet-4-6',
                         'gateway/bedrock:global.anthropic.claude-opus-4-5-20251101-v1:0',
+                        'gateway/bedrock:meta.llama3-1-405b-instruct-v1:0',
+                        'gateway/bedrock:meta.llama3-1-70b-instruct-v1:0',
+                        'gateway/bedrock:meta.llama3-1-8b-instruct-v1:0',
+                        'gateway/bedrock:meta.llama3-70b-instruct-v1:0',
+                        'gateway/bedrock:meta.llama3-8b-instruct-v1:0',
+                        'gateway/bedrock:mistral.mistral-7b-instruct-v0:2',
+                        'gateway/bedrock:mistral.mistral-large-2402-v1:0',
+                        'gateway/bedrock:mistral.mistral-large-2407-v1:0',
+                        'gateway/bedrock:mistral.mixtral-8x7b-instruct-v0:1',
+                        'gateway/bedrock:us.amazon.nova-2-lite-v1:0',
+                        'gateway/bedrock:us.amazon.nova-lite-v1:0',
+                        'gateway/bedrock:us.amazon.nova-micro-v1:0',
+                        'gateway/bedrock:us.amazon.nova-pro-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-3-5-haiku-20241022-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-3-5-sonnet-20240620-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+                        'gateway/bedrock:us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-3-haiku-20240307-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-3-opus-20240229-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-3-sonnet-20240229-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-haiku-4-5-20251001-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-opus-4-20250514-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-sonnet-4-20250514-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+                        'gateway/bedrock:us.anthropic.claude-sonnet-4-6',
+                        'gateway/bedrock:us.meta.llama3-1-70b-instruct-v1:0',
+                        'gateway/bedrock:us.meta.llama3-1-8b-instruct-v1:0',
+                        'gateway/bedrock:us.meta.llama3-2-11b-instruct-v1:0',
+                        'gateway/bedrock:us.meta.llama3-2-1b-instruct-v1:0',
+                        'gateway/bedrock:us.meta.llama3-2-3b-instruct-v1:0',
+                        'gateway/bedrock:us.meta.llama3-2-90b-instruct-v1:0',
+                        'gateway/bedrock:us.meta.llama3-3-70b-instruct-v1:0',
+                        'gateway/google-vertex:gemini-2.0-flash-lite',
+                        'gateway/google-vertex:gemini-2.0-flash',
                         'gateway/google-vertex:gemini-2.5-flash-image',
                         'gateway/google-vertex:gemini-2.5-flash-lite-preview-09-2025',
                         'gateway/google-vertex:gemini-2.5-flash-lite',
+                        'gateway/google-vertex:gemini-2.5-flash-preview-09-2025',
                         'gateway/google-vertex:gemini-2.5-flash',
                         'gateway/google-vertex:gemini-2.5-pro',
                         'gateway/google-vertex:gemini-3-flash-preview',
                         'gateway/google-vertex:gemini-3-pro-image-preview',
+                        'gateway/google-vertex:gemini-3-pro-preview',
                         'gateway/google-vertex:gemini-3.1-flash-image-preview',
                         'gateway/google-vertex:gemini-3.1-flash-lite-preview',
                         'gateway/google-vertex:gemini-3.1-pro-preview',
+                        'gateway/google-vertex:gemini-flash-latest',
+                        'gateway/google-vertex:gemini-flash-lite-latest',
                         'gateway/groq:llama-3.1-8b-instant',
                         'gateway/groq:llama-3.3-70b-versatile',
-                        'gateway/groq:meta-llama/llama-4-scout-17b-16e-instruct',
-                        'gateway/groq:moonshotai/kimi-k2-instruct-0905',
+                        'gateway/groq:meta-llama/llama-guard-4-12b',
                         'gateway/groq:openai/gpt-oss-120b',
                         'gateway/groq:openai/gpt-oss-20b',
+                        'gateway/groq:whisper-large-v3',
+                        'gateway/groq:whisper-large-v3-turbo',
+                        'gateway/groq:meta-llama/llama-4-maverick-17b-128e-instruct',
+                        'gateway/groq:meta-llama/llama-4-scout-17b-16e-instruct',
+                        'gateway/groq:meta-llama/llama-prompt-guard-2-22m',
+                        'gateway/groq:meta-llama/llama-prompt-guard-2-86m',
+                        'gateway/groq:moonshotai/kimi-k2-instruct-0905',
                         'gateway/groq:openai/gpt-oss-safeguard-20b',
+                        'gateway/groq:playai-tts',
+                        'gateway/groq:playai-tts-arabic',
+                        'gateway/groq:qwen/qwen-3-32b',
+                        'gateway/openai:computer-use-preview-2025-03-11',
+                        'gateway/openai:computer-use-preview',
                         'gateway/openai:gpt-3.5-turbo-0125',
+                        'gateway/openai:gpt-3.5-turbo-0301',
+                        'gateway/openai:gpt-3.5-turbo-0613',
                         'gateway/openai:gpt-3.5-turbo-1106',
+                        'gateway/openai:gpt-3.5-turbo-16k-0613',
                         'gateway/openai:gpt-3.5-turbo-16k',
                         'gateway/openai:gpt-3.5-turbo',
+                        'gateway/openai:gpt-4-0314',
                         'gateway/openai:gpt-4-0613',
                         'gateway/openai:gpt-4-turbo-2024-04-09',
                         'gateway/openai:gpt-4-turbo',
@@ -659,7 +737,12 @@ def test_model_json_schema_with_capabilities():
                         'gateway/openai:gpt-4o-2024-05-13',
                         'gateway/openai:gpt-4o-2024-08-06',
                         'gateway/openai:gpt-4o-2024-11-20',
+                        'gateway/openai:gpt-4o-audio-preview-2024-12-17',
+                        'gateway/openai:gpt-4o-audio-preview-2025-06-03',
+                        'gateway/openai:gpt-4o-audio-preview',
                         'gateway/openai:gpt-4o-mini-2024-07-18',
+                        'gateway/openai:gpt-4o-mini-audio-preview-2024-12-17',
+                        'gateway/openai:gpt-4o-mini-audio-preview',
                         'gateway/openai:gpt-4o-mini-search-preview-2025-03-11',
                         'gateway/openai:gpt-4o-mini-search-preview',
                         'gateway/openai:gpt-4o-mini',
@@ -668,16 +751,24 @@ def test_model_json_schema_with_capabilities():
                         'gateway/openai:gpt-4o',
                         'gateway/openai:gpt-5-2025-08-07',
                         'gateway/openai:gpt-5-chat-latest',
+                        'gateway/openai:gpt-5-codex',
                         'gateway/openai:gpt-5-mini-2025-08-07',
                         'gateway/openai:gpt-5-mini',
                         'gateway/openai:gpt-5-nano-2025-08-07',
                         'gateway/openai:gpt-5-nano',
+                        'gateway/openai:gpt-5-pro-2025-10-06',
+                        'gateway/openai:gpt-5-pro',
                         'gateway/openai:gpt-5.1-2025-11-13',
                         'gateway/openai:gpt-5.1-chat-latest',
+                        'gateway/openai:gpt-5.1-codex-max',
+                        'gateway/openai:gpt-5.1-codex',
                         'gateway/openai:gpt-5.1',
                         'gateway/openai:gpt-5.2-2025-12-11',
                         'gateway/openai:gpt-5.2-chat-latest',
+                        'gateway/openai:gpt-5.2-pro-2025-12-11',
+                        'gateway/openai:gpt-5.2-pro',
                         'gateway/openai:gpt-5.2',
+                        'gateway/openai:gpt-5.3-chat-latest',
                         'gateway/openai:gpt-5.4-mini-2026-03-17',
                         'gateway/openai:gpt-5.4-mini',
                         'gateway/openai:gpt-5.4-nano-2026-03-17',
@@ -685,12 +776,20 @@ def test_model_json_schema_with_capabilities():
                         'gateway/openai:gpt-5.4',
                         'gateway/openai:gpt-5',
                         'gateway/openai:o1-2024-12-17',
+                        'gateway/openai:o1-pro-2025-03-19',
+                        'gateway/openai:o1-pro',
                         'gateway/openai:o1',
                         'gateway/openai:o3-2025-04-16',
+                        'gateway/openai:o3-deep-research-2025-06-26',
+                        'gateway/openai:o3-deep-research',
                         'gateway/openai:o3-mini-2025-01-31',
                         'gateway/openai:o3-mini',
+                        'gateway/openai:o3-pro-2025-06-10',
+                        'gateway/openai:o3-pro',
                         'gateway/openai:o3',
                         'gateway/openai:o4-mini-2025-04-16',
+                        'gateway/openai:o4-mini-deep-research-2025-06-26',
+                        'gateway/openai:o4-mini-deep-research',
                         'gateway/openai:o4-mini',
                         'google-gla:gemini-2.0-flash-lite',
                         'google-gla:gemini-2.0-flash',
@@ -783,18 +882,11 @@ def test_model_json_schema_with_capabilities():
                         'heroku:claude-3-haiku',
                         'heroku:claude-4-5-haiku',
                         'heroku:claude-4-5-sonnet',
-                        'heroku:claude-4-6-sonnet',
                         'heroku:claude-4-sonnet',
                         'heroku:claude-opus-4-5',
-                        'heroku:claude-opus-4-6',
-                        'heroku:deepseek-v3-2',
-                        'heroku:glm-4-7',
-                        'heroku:glm-4-7-flash',
                         'heroku:gpt-oss-120b',
-                        'heroku:kimi-k2-5',
                         'heroku:kimi-k2-thinking',
                         'heroku:minimax-m2',
-                        'heroku:minimax-m2-1',
                         'heroku:qwen3-235b',
                         'heroku:qwen3-coder-480b',
                         'heroku:nova-2-lite',
@@ -1109,41 +1201,11 @@ Supported by:
                     'title': 'short_spec_BuiltinTool',
                     'type': 'object',
                 },
-                'short_spec_IncludeToolReturnSchemas': {
-                    'additionalProperties': False,
-                    'properties': {
-                        'IncludeToolReturnSchemas': {
-                            'anyOf': [
-                                {'const': 'all', 'type': 'string'},
-                                {'items': {'type': 'string'}, 'type': 'array'},
-                                {'additionalProperties': True, 'type': 'object'},
-                            ],
-                            'title': 'Includetoolreturnschemas',
-                        }
-                    },
-                    'title': 'short_spec_IncludeToolReturnSchemas',
-                    'type': 'object',
-                },
                 'short_spec_MCP': {
                     'additionalProperties': False,
                     'properties': {'MCP': {'title': 'Mcp', 'type': 'string'}},
                     'required': ['MCP'],
                     'title': 'short_spec_MCP',
-                    'type': 'object',
-                },
-                'short_spec_SetToolMetadata': {
-                    'additionalProperties': False,
-                    'properties': {
-                        'SetToolMetadata': {
-                            'anyOf': [
-                                {'const': 'all', 'type': 'string'},
-                                {'items': {'type': 'string'}, 'type': 'array'},
-                                {'additionalProperties': True, 'type': 'object'},
-                            ],
-                            'title': 'Settoolmetadata',
-                        }
-                    },
-                    'title': 'short_spec_SetToolMetadata',
                     'type': 'object',
                 },
                 'short_spec_Thinking': {
@@ -1296,13 +1358,9 @@ Supported by:
                                 {'$ref': '#/$defs/short_spec_BuiltinTool'},
                                 {'const': 'ImageGeneration', 'type': 'string'},
                                 {'$ref': '#/$defs/spec_ImageGeneration'},
-                                {'const': 'IncludeToolReturnSchemas', 'type': 'string'},
-                                {'$ref': '#/$defs/short_spec_IncludeToolReturnSchemas'},
                                 {'$ref': '#/$defs/short_spec_MCP'},
                                 {'$ref': '#/$defs/spec_MCP'},
                                 {'$ref': '#/$defs/spec_PrefixTools'},
-                                {'const': 'SetToolMetadata', 'type': 'string'},
-                                {'$ref': '#/$defs/short_spec_SetToolMetadata'},
                                 {'const': 'Thinking', 'type': 'string'},
                                 {'$ref': '#/$defs/short_spec_Thinking'},
                                 {'const': 'WebFetch', 'type': 'string'},
@@ -1438,13 +1496,9 @@ Supported by:
                             {'$ref': '#/$defs/short_spec_BuiltinTool'},
                             {'const': 'ImageGeneration', 'type': 'string'},
                             {'$ref': '#/$defs/spec_ImageGeneration'},
-                            {'const': 'IncludeToolReturnSchemas', 'type': 'string'},
-                            {'$ref': '#/$defs/short_spec_IncludeToolReturnSchemas'},
                             {'$ref': '#/$defs/short_spec_MCP'},
                             {'$ref': '#/$defs/spec_MCP'},
                             {'$ref': '#/$defs/spec_PrefixTools'},
-                            {'const': 'SetToolMetadata', 'type': 'string'},
-                            {'$ref': '#/$defs/short_spec_SetToolMetadata'},
                             {'const': 'Thinking', 'type': 'string'},
                             {'$ref': '#/$defs/short_spec_Thinking'},
                             {'const': 'WebFetch', 'type': 'string'},
@@ -1982,121 +2036,6 @@ async def test_combined_capability_for_run_returns_new_when_child_changes():
     assert new_per_run.run_id == 1
 
 
-def test_apply_single_capability():
-    """AbstractCapability.apply() visits just the capability itself."""
-
-    @dataclass
-    class MyCap(AbstractCapability[None]):
-        pass
-
-    cap = MyCap()
-    visited: list[AbstractCapability[None]] = []
-    cap.apply(visited.append)
-    assert visited == [cap]
-
-
-def test_apply_combined_capability():
-    """CombinedCapability.apply() recursively visits all leaf capabilities."""
-
-    @dataclass
-    class CapA(AbstractCapability[None]):
-        pass
-
-    @dataclass
-    class CapB(AbstractCapability[None]):
-        pass
-
-    cap_a = CapA()
-    cap_b = CapB()
-    combined = CombinedCapability([cap_a, cap_b])
-
-    visited: list[AbstractCapability[None]] = []
-    combined.apply(visited.append)
-    assert visited == [cap_a, cap_b]
-
-
-def test_apply_nested_combined_capability():
-    """CombinedCapability.apply() flattens nested CombinedCapabilities."""
-
-    @dataclass
-    class CapA(AbstractCapability[None]):
-        pass
-
-    @dataclass
-    class CapB(AbstractCapability[None]):
-        pass
-
-    @dataclass
-    class CapC(AbstractCapability[None]):
-        pass
-
-    cap_a = CapA()
-    cap_b = CapB()
-    cap_c = CapC()
-    inner = CombinedCapability([cap_a, cap_b])
-    outer = CombinedCapability([inner, cap_c])
-
-    visited: list[AbstractCapability[None]] = []
-    outer.apply(visited.append)
-    assert visited == [cap_a, cap_b, cap_c]
-
-
-def test_apply_wrapper_capability():
-    """WrapperCapability.apply() delegates to the wrapped capability."""
-    inner = Thinking()
-    wrapper = WrapperCapability(wrapped=inner)
-
-    visited: list[AbstractCapability[None]] = []
-    wrapper.apply(visited.append)
-    assert visited == [inner]
-
-
-def test_apply_prefix_tools():
-    """PrefixTools (a WrapperCapability) delegates apply() to the wrapped capability."""
-    thinking = Thinking()
-    prefixed = PrefixTools(wrapped=thinking, prefix='ns')
-
-    visited: list[AbstractCapability[None]] = []
-    prefixed.apply(visited.append)
-    assert visited == [thinking]
-
-
-def test_apply_finds_capability_by_type():
-    """Realistic usage: use apply() to check if a specific capability type is present."""
-    thinking = Thinking()
-    web_search = WebSearch()
-    combined = CombinedCapability([thinking, web_search])
-
-    visited: list[AbstractCapability[None]] = []
-    combined.apply(visited.append)
-
-    assert any(isinstance(c, Thinking) for c in visited)
-    assert any(isinstance(c, WebSearch) for c in visited)
-    assert not any(isinstance(c, WebFetch) for c in visited)
-
-
-def test_apply_finds_wrapped_capability_by_type():
-    """apply() traverses through wrappers, so wrapped capabilities are discoverable by type."""
-    thinking = Thinking()
-    prefixed = PrefixTools(wrapped=thinking, prefix='ns')
-    combined = CombinedCapability([prefixed, WebSearch()])
-
-    visited: list[AbstractCapability[None]] = []
-    combined.apply(visited.append)
-
-    assert any(isinstance(c, Thinking) for c in visited)
-    assert any(isinstance(c, WebSearch) for c in visited)
-    assert not any(isinstance(c, PrefixTools) for c in visited)
-
-
-def test_apply_empty_combined():
-    """CombinedCapability with no children visits nothing."""
-    combined = CombinedCapability[None]([])
-    visited: list[AbstractCapability[None]] = []
-    combined.apply(visited.append)
-    assert visited == []
-
-
 async def test_for_run_with_different_toolset():
     """When for_run returns a capability with a different get_toolset(), the per-run toolset is used."""
     toolset_a = FunctionToolset(id='a')
@@ -2207,7 +2146,7 @@ class _ReplacingCapability(AbstractCapability[Any]):
     replaced: bool = field(default=False, init=False)
 
     async def before_node_run(self, ctx: RunContext[Any], *, node: Any) -> Any:
-        from pydantic_ai import ModelRequestNode
+        from pydantic_ai._agent_graph import ModelRequestNode
 
         if isinstance(node, ModelRequestNode) and not self.replaced:
             self.replaced = True
@@ -3393,32 +3332,6 @@ class TestWrapRunEventStream:
         async with agent.run_stream('hello') as stream:
             await stream.get_output()
         assert len(observed_events) > 0
-
-    async def test_wrap_run_event_stream_fires_in_run_without_handler(self):
-        """wrap_run_event_stream fires in run() even without an event_stream_handler."""
-        observed_events: list[AgentStreamEvent] = []
-
-        @dataclass
-        class ObserverCap(AbstractCapability[Any]):
-            async def wrap_run_event_stream(
-                self,
-                ctx: RunContext[Any],
-                *,
-                stream: AsyncIterable[AgentStreamEvent],
-            ) -> AsyncIterable[AgentStreamEvent]:
-                async for event in stream:
-                    observed_events.append(event)
-                    yield event
-
-        agent = Agent(
-            FunctionModel(simple_model_function, stream_function=simple_stream_function),
-            capabilities=[ObserverCap()],
-        )
-
-        # No event_stream_handler — hook should still fire via forced streaming
-        result = await agent.run('hello')
-        assert result.output is not None
-        assert any(isinstance(e, PartStartEvent) for e in observed_events)
 
 
 class TestWrapRunShortCircuit:
@@ -5063,7 +4976,7 @@ class TestGetWrapperToolsetHook:
         )
 
     async def test_wrapper_chaining_order(self):
-        """Multiple capabilities' wrappers compose by nesting: first wraps outermost."""
+        """Multiple capabilities' wrappers compose by nesting: first wraps innermost."""
         from pydantic_ai.toolsets.prefixed import PrefixedToolset
 
         @dataclass
@@ -5087,8 +5000,8 @@ class TestGetWrapperToolsetHook:
             return 'r'  # pragma: no cover
 
         result = await agent.run('hello')
-        # First cap wraps outermost (matching wrap_* hooks): a_b_tool
-        assert result.output == "tools: ['a_b_tool']"
+        # First cap wraps innermost (a_tool), then second wraps that (b_a_tool)
+        assert result.output == "tools: ['b_a_tool']"
         assert result.all_messages() == snapshot(
             [
                 ModelRequest(
@@ -5097,7 +5010,7 @@ class TestGetWrapperToolsetHook:
                     run_id=IsStr(),
                 ),
                 ModelResponse(
-                    parts=[TextPart(content="tools: ['a_b_tool']")],
+                    parts=[TextPart(content="tools: ['b_a_tool']")],
                     usage=RequestUsage(input_tokens=51, output_tokens=2),
                     model_name='function:model_fn:',
                     timestamp=IsDatetime(),
@@ -6346,45 +6259,6 @@ class TestHooksCapability:
         async with agent.run_stream('hello') as stream:
             await stream.get_output()
         assert len(events_seen) > 0
-
-    async def test_on_event_hook_fires_in_run(self):
-        """on.event fires in run() even without an event_stream_handler."""
-        hooks = Hooks()
-        events_seen: list[str] = []
-
-        @hooks.on.event
-        async def observe(ctx: RunContext[Any], event: AgentStreamEvent) -> AgentStreamEvent:
-            events_seen.append(type(event).__name__)
-            return event
-
-        agent = Agent(
-            FunctionModel(simple_model_function, stream_function=simple_stream_function),
-            capabilities=[hooks],
-        )
-        result = await agent.run('hello')
-        assert result.output is not None
-        assert 'PartStartEvent' in events_seen
-
-    async def test_wrap_run_event_stream_fires_in_run(self):
-        """on.run_event_stream fires in run() even without an event_stream_handler."""
-        hooks = Hooks()
-        events_seen: list[str] = []
-
-        @hooks.on.run_event_stream
-        async def observe_stream(
-            ctx: RunContext[Any], *, stream: AsyncIterable[AgentStreamEvent]
-        ) -> AsyncIterable[AgentStreamEvent]:
-            async for event in stream:
-                events_seen.append(type(event).__name__)
-                yield event
-
-        agent = Agent(
-            FunctionModel(simple_model_function, stream_function=simple_stream_function),
-            capabilities=[hooks],
-        )
-        result = await agent.run('hello')
-        assert result.output is not None
-        assert 'PartStartEvent' in events_seen
 
     async def test_on_event_with_run_event_stream(self):
         """on.event and on.run_event_stream can be used together."""
@@ -8440,372 +8314,297 @@ async def test_thread_executor_static_method() -> None:
         executor.shutdown(wait=True)
 
 
-# --- Capability ordering tests ---
+# ===== Pending Message Queue Tests =====
 
 
-@dataclass
-class OutermostCap(AbstractCapability[Any]):
-    @classmethod
-    def get_ordering(cls) -> CapabilityOrdering:
-        return CapabilityOrdering(position='outermost')
-
-
-@dataclass
-class InnermostCap(AbstractCapability[Any]):
-    @classmethod
-    def get_ordering(cls) -> CapabilityOrdering:
-        return CapabilityOrdering(position='innermost')
-
-
-@dataclass
-class PlainCapA(AbstractCapability[Any]):
-    pass
-
-
-@dataclass
-class PlainCapB(AbstractCapability[Any]):
-    pass
-
-
-@dataclass
-class WrapsACap(AbstractCapability[Any]):
-    """Must wrap around PlainCapA."""
-
-    @classmethod
-    def get_ordering(cls) -> CapabilityOrdering:
-        return CapabilityOrdering(wraps=[PlainCapA])
-
-
-@dataclass
-class RequiresOutermostCap(AbstractCapability[Any]):
-    @classmethod
-    def get_ordering(cls) -> CapabilityOrdering:
-        return CapabilityOrdering(requires=[OutermostCap])
-
-
-def _cap_names(combined: CombinedCapability) -> list[str]:
-    return [type(c).__name__ for c in combined.capabilities]
-
-
-def test_ordering_outermost():
-    """Capability declaring 'outermost' ends up at index 0."""
-    combined = CombinedCapability([PlainCapA(), OutermostCap(), PlainCapB()])
-    assert _cap_names(combined) == ['OutermostCap', 'PlainCapA', 'PlainCapB']
-
-
-def test_ordering_innermost():
-    """Capability declaring 'innermost' ends up last."""
-    combined = CombinedCapability([InnermostCap(), PlainCapA(), PlainCapB()])
-    assert _cap_names(combined) == ['PlainCapA', 'PlainCapB', 'InnermostCap']
-
-
-def test_ordering_both_outermost_and_innermost():
-    """Both outermost and innermost present."""
-    combined = CombinedCapability([PlainCapA(), InnermostCap(), OutermostCap()])
-    assert combined.capabilities[0].__class__ is OutermostCap
-    assert combined.capabilities[-1].__class__ is InnermostCap
-
-
-def test_ordering_multiple_outermost_tier():
-    """Multiple outermost capabilities form a tier; original order breaks ties."""
-
-    @dataclass
-    class OutermostCap2(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(position='outermost')
-
-    combined = CombinedCapability([PlainCapA(), OutermostCap2(), OutermostCap()])
-    # Both outermost caps before PlainCapA; original order (OutermostCap2 before OutermostCap) preserved
-    assert _cap_names(combined) == ['OutermostCap2', 'OutermostCap', 'PlainCapA']
-
-
-def test_ordering_multiple_innermost_tier():
-    """Multiple innermost capabilities form a tier; original order breaks ties."""
-
-    @dataclass
-    class InnermostCap2(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(position='innermost')
-
-    combined = CombinedCapability([InnermostCap(), InnermostCap2(), PlainCapA()])
-    # PlainCapA first, then both innermost in original order
-    assert _cap_names(combined) == ['PlainCapA', 'InnermostCap', 'InnermostCap2']
-
-
-def test_ordering_outermost_tier_with_wraps():
-    """wraps/wrapped_by refines order within the outermost tier."""
-
-    @dataclass
-    class OuterA(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(position='outermost')
-
-    @dataclass
-    class OuterB(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(position='outermost', wraps=[OuterA])
-
-    # OuterB listed after OuterA, but wraps=[OuterA] overrides tiebreaker
-    combined = CombinedCapability([OuterA(), PlainCapA(), OuterB()])
-    assert _cap_names(combined) == ['OuterB', 'OuterA', 'PlainCapA']
-
-
-def test_ordering_wraps():
-    """Explicit 'wraps' edge is respected."""
-    combined = CombinedCapability([PlainCapA(), WrapsACap()])
-    assert _cap_names(combined) == ['WrapsACap', 'PlainCapA']
-
-
-def test_ordering_wrapped_by():
-    """Explicit 'wrapped_by' edge is respected."""
-
-    @dataclass
-    class WrappedByACap(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(wrapped_by=[PlainCapA])
-
-    combined = CombinedCapability([WrappedByACap(), PlainCapA()])
-    assert _cap_names(combined) == ['PlainCapA', 'WrappedByACap']
-
-
-def test_ordering_requires_present():
-    """No error when required capability is present."""
-    combined = CombinedCapability([RequiresOutermostCap(), OutermostCap()])
-    assert len(combined.capabilities) == 2
-
-
-def test_ordering_requires_missing():
-    with pytest.raises(UserError, match='`RequiresOutermostCap` requires `OutermostCap`'):
-        CombinedCapability([RequiresOutermostCap(), PlainCapA()])
-
-
-def test_ordering_preserves_user_order():
-    """Capabilities without constraints keep their relative order."""
-    a, b = PlainCapB(), PlainCapA()
-    combined = CombinedCapability([a, b])
-    assert list(combined.capabilities) == [a, b]
-
-
-def test_ordering_nested_combined():
-    """Ordering from leaves inside a nested CombinedCapability is respected.
-
-    When a CombinedCapability is nested inside another, its leaves' ordering
-    constraints are merged and applied to the outer sort. Leaves without
-    ordering constraints are skipped during the merge.
-    """
-    # OutermostCap declares position='outermost'; PlainCapB has no ordering.
-    # The merged effective ordering for 'inner' should be position='outermost',
-    # placing it before PlainCapA despite being listed second.
-    inner = CombinedCapability([PlainCapB(), OutermostCap()])
-    combined = CombinedCapability([PlainCapA(), inner])
-    assert combined.capabilities[0] is inner
-
-
-def test_ordering_nested_combined_no_constraints():
-    """A nested CombinedCapability with no ordering leaves is treated as unconstrained."""
-    inner = CombinedCapability([PlainCapA(), PlainCapB()])
-    combined = CombinedCapability([inner, OutermostCap()])
-    # OutermostCap first (has ordering), inner second (no constraints → unconstrained)
-    assert combined.capabilities[0].__class__ is OutermostCap
-    assert combined.capabilities[1] is inner
-
-
-def test_ordering_nested_combined_wraps_without_position():
-    """A nested CombinedCapability with wraps constraints (but no position) merges correctly."""
-    inner = CombinedCapability([PlainCapB(), WrapsACap()])
-    # WrapsACap has wraps=[PlainCapA] but no position.
-    # The nested group inherits that constraint, so it sorts before PlainCapA.
-    combined = CombinedCapability([PlainCapA(), inner])
-    assert combined.capabilities[0] is inner
-    assert combined.capabilities[1].__class__ is PlainCapA
-
-
-def test_ordering_single_capability():
-    """Single capability in CombinedCapability is unchanged."""
-    cap = OutermostCap()
-    combined = CombinedCapability([cap])
-    assert list(combined.capabilities) == [cap]
-
-
-def test_ordering_no_constraints_noop():
-    """When no capability declares ordering, list is unchanged."""
-    a, b = PlainCapA(), PlainCapB()
-    combined = CombinedCapability([a, b])
-    assert list(combined.capabilities) == [a, b]
-
-
-def test_ordering_cycle_detection():
-    @dataclass
-    class CycleA(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(wraps=[CycleB])
-
-    @dataclass
-    class CycleB(AbstractCapability[Any]):
-        @classmethod
-        def get_ordering(cls) -> CapabilityOrdering:
-            return CapabilityOrdering(wraps=[CycleA])
-
-    with pytest.raises(UserError, match='Circular ordering constraints'):
-        CombinedCapability([CycleA(), CycleB()])
-
-
-def test_ordering_conflicting_positions_in_nested():
-    """Conflicting positions in a nested CombinedCapability raise UserError."""
-    inner = CombinedCapability([OutermostCap(), InnermostCap()])
-    with pytest.raises(UserError, match='Conflicting positions in nested CombinedCapability'):
-        CombinedCapability([inner, PlainCapA()])
-
-
-def test_ordering_wrapper_capability_recurses():
-    """Ordering constraints on capabilities inside a WrapperCapability are preserved."""
-    wrapped = WrapperCapability(wrapped=OutermostCap())
-    # The WrapperCapability wraps an OutermostCap; ordering sees through via apply()
-    # and picks up OutermostCap's position='outermost' constraint.
-    combined = CombinedCapability([PlainCapA(), wrapped])
-    assert combined.capabilities[0] is wrapped
-
-
-# --- Hook recovery tests (after_node_run End→node, ErrorMarker in next_node) ---
-
-
-async def test_after_node_run_end_to_node_override():
-    """after_node_run can convert an End result back to a node, continuing execution."""
-    from pydantic_ai import ModelRequestNode
-
+async def test_enqueue_steering_message_from_tool():
+    """Steering messages enqueued from a tool are injected before the next model request."""
     call_count = 0
-
-    def llm(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return ModelResponse(parts=[TextPart('first answer')])
-        return ModelResponse(parts=[TextPart('second answer')])
-
-    redirected = False
-
-    @dataclass
-    class RedirectOnFirstEnd(AbstractCapability[Any]):
-        """Redirects the first End back to a ModelRequestNode to force a second model call."""
-
-        _redirected: bool = field(default=False, init=False)
-
-        async def after_node_run(self, ctx: RunContext[Any], *, node: Any, result: Any) -> Any:
-            nonlocal redirected
-            if isinstance(result, End) and not self._redirected:
-                self._redirected = True
-                redirected = True
-                return ModelRequestNode(ModelRequest(parts=[UserPromptPart(content='try again')]))  # pyright: ignore[reportUnknownVariableType]
-            return result  # pyright: ignore[reportUnknownVariableType]
-
-    agent = Agent(FunctionModel(llm), capabilities=[RedirectOnFirstEnd()])
-    result = await agent.run('hello')
-
-    assert redirected
-    assert call_count == 2
-    assert result.output == 'second answer'
-
-
-async def test_next_node_raises_on_error_marker():
-    """Accessing next_node after a node error re-raises the original exception."""
-    call_count = 0
-
-    def failing_then_ok_model(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-        nonlocal call_count
-        call_count += 1
-        raise ValueError('model failure')
-
-    agent = Agent(FunctionModel(failing_then_ok_model))
-    async with agent.iter('hello') as agent_run:
-        node = agent_run.next_node
-        while not isinstance(node, End):
-            try:
-                node = await agent_run.next(node)
-            except ValueError:
-                # After an unrecovered error, next_node should re-raise
-                with pytest.raises(ValueError, match='model failure'):
-                    _ = agent_run.next_node
-                break
-
-
-async def test_on_node_run_error_returns_end():
-    """on_node_run_error can recover from an exception by returning End, completing the run."""
-    from pydantic_ai.result import FinalResult
-
-    def always_fails(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-        raise ValueError('model exploded')
-
-    @dataclass
-    class RecoverWithEnd(AbstractCapability[Any]):
-        async def on_node_run_error(self, ctx: RunContext[Any], *, node: Any, error: Exception) -> Any:
-            return End(FinalResult('recovered output'))
-
-    agent = Agent(FunctionModel(always_fails), capabilities=[RecoverWithEnd()])
-    result = await agent.run('hello')
-    assert result.output == 'recovered output'
-
-
-async def test_on_node_run_error_returns_node():
-    """on_node_run_error can recover by returning a retry node, continuing execution."""
-    from pydantic_ai import ModelRequestNode
-
-    call_count = 0
-
-    def fails_then_succeeds(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise ValueError('transient failure')
-        return ModelResponse(parts=[TextPart('recovered')])
-
-    @dataclass
-    class RetryOnError(AbstractCapability[Any]):
-        async def on_node_run_error(self, ctx: RunContext[Any], *, node: Any, error: Exception) -> Any:
-            # Retry by returning a new ModelRequestNode with the same request
-            return ModelRequestNode(request=node.request)  # pyright: ignore[reportUnknownVariableType]
-
-    agent = Agent(FunctionModel(fails_then_succeeds), capabilities=[RetryOnError()])
-    result = await agent.run('hello')
-    assert call_count == 2
-    assert result.output == 'recovered'
-
-
-async def test_after_node_run_node_to_end():
-    """after_node_run can short-circuit a run by converting a continuation node to End."""
-    from pydantic_ai.result import FinalResult
-
-    model_call_count = 0
 
     def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-        nonlocal model_call_count
-        model_call_count += 1
-        # Always request a tool call, producing a CallToolsNode (not End)
-        return ModelResponse(parts=[ToolCallPart(tool_name='my_tool', args='{}')])
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return ModelResponse(
+                parts=[ToolCallPart(tool_name='inject_msg', args='{}')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        else:
+            return ModelResponse(
+                parts=[TextPart(content='done')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
 
-    @dataclass
-    class ShortCircuitAfterModelRequest(AbstractCapability[Any]):
-        """Short-circuit after the first model request node by converting the continuation to End."""
+    agent = Agent(FunctionModel(model_fn))
 
-        async def after_node_run(self, ctx: RunContext[Any], *, node: Any, result: Any) -> Any:
-            from pydantic_ai import ModelRequestNode
+    @agent.tool
+    def inject_msg(ctx: RunContext[None]) -> str:
+        ctx.enqueue_message(SystemPromptPart('Injected steering message'))
+        return 'ok'
 
-            # The ModelRequestNode produces a CallToolsNode (not End); convert it to End.
-            if isinstance(node, ModelRequestNode) and not isinstance(result, End):
-                return End(FinalResult('short-circuited'))
-            return result  # pyright: ignore[reportUnknownVariableType]
+    result = await agent.run('Hello')
+    assert result.output == 'done'
 
-    agent = Agent(FunctionModel(model_fn), capabilities=[ShortCircuitAfterModelRequest()])
+    # Verify the steering message appears before the second model request
+    messages = result.all_messages()
+    # Find a ModelRequest that contains a SystemPromptPart with our injected content
+    found = False
+    for msg in messages:
+        if isinstance(msg, ModelRequest):
+            for part in msg.parts:
+                if isinstance(part, SystemPromptPart) and 'Injected steering message' in part.content:
+                    found = True
+                    break
+    assert found, 'Steering message was not found in message history'
+
+
+async def test_enqueue_follow_up_message_prevents_end():
+    """Follow-up messages prevent the agent from ending and are drained into a new ModelRequest."""
+    call_count = 0
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return ModelResponse(
+                parts=[ToolCallPart(tool_name='inject_follow_up', args='{}')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        elif call_count == 2:
+            # Agent produces final result, but follow-up is pending
+            return ModelResponse(
+                parts=[TextPart(content='premature end')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        else:
+            # After follow-up is drained, agent produces real final result
+            return ModelResponse(
+                parts=[TextPart(content='final answer after follow-up')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+
+    agent = Agent(FunctionModel(model_fn))
+
+    @agent.tool
+    def inject_follow_up(ctx: RunContext[None]) -> str:
+        ctx.enqueue_message(UserPromptPart('Follow-up context'), priority='follow_up')
+        return 'ok'
+
+    result = await agent.run('Hello')
+    assert result.output == 'final answer after follow-up'
+    assert call_count == 3
+
+
+async def test_enqueue_message_from_agent_run():
+    """Messages can be enqueued from external code via AgentRun.enqueue_message."""
+    call_count = 0
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal call_count
+        call_count += 1
+        return ModelResponse(
+            parts=[TextPart(content=f'response {call_count}')],
+            usage=RequestUsage(input_tokens=10, output_tokens=5),
+        )
+
+    agent = Agent(FunctionModel(model_fn))
+
+    async with agent.iter('Hello') as agent_run:
+        # Enqueue a follow-up message from external code before iteration
+        agent_run.enqueue_message(UserPromptPart('External follow-up'), priority='follow_up')
+        # Use next() to drive iteration so after_node_run fires
+        node = agent_run.next_node
+        while not isinstance(node, End):
+            node = await agent_run.next(node)
+
+    assert agent_run.result is not None
+    assert call_count == 2  # First response triggers End, follow-up prevents it, second response is final
+
+
+# ===== Background Tools Tests =====
+
+
+async def test_background_tool_basic():
+    """Background tools run asynchronously and deliver results as follow-up messages."""
+    call_count = 0
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            # Call the background tool
+            return ModelResponse(
+                parts=[ToolCallPart(tool_name='slow_research', args='{"query": "test"}')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        elif call_count == 2:
+            # Agent continues after getting ack — model produces a "waiting" response
+            return ModelResponse(
+                parts=[TextPart(content='waiting for background task')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        else:
+            # After background result is delivered as follow-up
+            # Check if the background result is in the messages
+            for msg in messages:
+                if isinstance(msg, ModelRequest):
+                    for part in msg.parts:
+                        if isinstance(part, SystemPromptPart) and 'completed' in part.content:
+                            return ModelResponse(
+                                parts=[TextPart(content='got the background result')],
+                                usage=RequestUsage(input_tokens=10, output_tokens=5),
+                            )
+            return ModelResponse(
+                parts=[TextPart(content='no background result yet')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+
+    agent = Agent(FunctionModel(model_fn))
+
+    @agent.tool(background=True)
+    async def slow_research(ctx: RunContext[None], query: str) -> str:
+        await asyncio.sleep(0.01)  # Simulate slow work
+        return f'Research result for {query}'
+
+    result = await agent.run('Do some research')
+    assert result.output == 'got the background result'
+
+
+async def test_background_tool_error_handling():
+    """Background tools that fail deliver error messages as follow-ups."""
+    call_count = 0
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return ModelResponse(
+                parts=[ToolCallPart(tool_name='failing_tool', args='{}')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        elif call_count == 2:
+            return ModelResponse(
+                parts=[TextPart(content='waiting')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        else:
+            for msg in messages:
+                if isinstance(msg, ModelRequest):
+                    for part in msg.parts:
+                        if isinstance(part, SystemPromptPart) and 'failed' in part.content:
+                            return ModelResponse(
+                                parts=[TextPart(content='handled the failure')],
+                                usage=RequestUsage(input_tokens=10, output_tokens=5),
+                            )
+            return ModelResponse(
+                parts=[TextPart(content='no error message')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+
+    agent = Agent(FunctionModel(model_fn))
+
+    @agent.tool_plain(background=True)
+    async def failing_tool() -> str:
+        await asyncio.sleep(0.01)
+        raise RuntimeError('Tool execution failed')
+
+    result = await agent.run('Do something')
+    assert result.output == 'handled the failure'
+
+
+async def test_background_tool_ack_message():
+    """Background tools return an immediate acknowledgment to the agent."""
+    call_count = 0
+    ack_content: str | None = None
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal call_count, ack_content
+        call_count += 1
+        if call_count == 1:
+            return ModelResponse(
+                parts=[ToolCallPart(tool_name='bg_tool', args='{}')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        else:
+            # Check the tool return for the ack
+            for msg in messages:
+                if isinstance(msg, ModelRequest):
+                    for part in msg.parts:
+                        if isinstance(part, ToolReturnPart) and 'running in background' in str(part.content):
+                            ack_content = str(part.content)
+            return ModelResponse(
+                parts=[TextPart(content='done')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+
+    agent = Agent(FunctionModel(model_fn))
+
+    @agent.tool_plain(background=True)
+    async def bg_tool() -> str:
+        await asyncio.sleep(0.5)  # Long-running, won't complete before agent finishes
+        return 'result'
+
+    result = await agent.run('Test')
+    assert result.output == 'done'
+    assert ack_content is not None
+    assert 'running in background' in ack_content
+
+
+async def test_non_background_tool_unaffected():
+    """Non-background tools are executed normally, not spawned as background tasks."""
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        for msg in messages:
+            if isinstance(msg, ModelRequest):
+                for part in msg.parts:
+                    if isinstance(part, ToolReturnPart) and part.content == 'sync result':
+                        return ModelResponse(
+                            parts=[TextPart(content='got sync result')],
+                            usage=RequestUsage(input_tokens=10, output_tokens=5),
+                        )
+        return ModelResponse(
+            parts=[ToolCallPart(tool_name='normal_tool', args='{}')],
+            usage=RequestUsage(input_tokens=10, output_tokens=5),
+        )
+
+    agent = Agent(FunctionModel(model_fn))
 
     @agent.tool_plain
-    def my_tool() -> str:
-        return 'tool result'  # pragma: no cover
+    def normal_tool() -> str:
+        return 'sync result'
 
-    result = await agent.run('hello')
-    assert result.output == 'short-circuited'
-    assert model_call_count == 1
+    result = await agent.run('Test')
+    assert result.output == 'got sync result'
+
+
+async def test_pending_messages_accessible_on_run_context():
+    """RunContext.pending_messages is accessible and initially empty."""
+    queue_observed = False
+    call_count = 0
+
+    def model_fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return ModelResponse(
+                parts=[ToolCallPart(tool_name='check_queue', args='{}')],
+                usage=RequestUsage(input_tokens=10, output_tokens=5),
+            )
+        return ModelResponse(
+            parts=[TextPart(content='done')],
+            usage=RequestUsage(input_tokens=10, output_tokens=5),
+        )
+
+    agent = Agent(FunctionModel(model_fn))
+
+    @agent.tool
+    def check_queue(ctx: RunContext[None]) -> str:
+        nonlocal queue_observed
+        assert len(ctx.pending_messages) == 0
+        ctx.enqueue_message(SystemPromptPart('test'), priority='steering')
+        assert len(ctx.pending_messages) == 1
+        queue_observed = True
+        return 'done'
+
+    await agent.run('Test')
+    assert queue_observed

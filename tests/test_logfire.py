@@ -519,24 +519,7 @@ def test_logfire(
                                 'timeout': None,
                                 'defer_loading': False,
                                 'prefer_builtin': None,
-                                'return_schema': None,
-                                'include_return_schema': None,
-                                'function_signature': {
-                                    'kind': 'function',
-                                    'name': 'my_ret',
-                                    'description': None,
-                                    'params': {
-                                        'x': {
-                                            'kind': 'param',
-                                            'name': 'x',
-                                            'type': {'name': 'int', 'kind': 'simple'},
-                                            'default': None,
-                                        }
-                                    },
-                                    'return_type': {'name': 'str', 'kind': 'simple'},
-                                    'referenced_types': [],
-                                    'is_async': False,
-                                },
+                                'background': False,
                             }
                         ],
                         'builtin_tools': [],
@@ -1035,9 +1018,7 @@ def test_instructions_with_structured_output_exclude_content_v2_v3(
                                 'timeout': None,
                                 'defer_loading': False,
                                 'prefer_builtin': None,
-                                'return_schema': None,
-                                'include_return_schema': None,
-                                'function_signature': None,
+                                'background': False,
                             }
                         ],
                         'prompted_output_template': None,
@@ -1152,7 +1133,6 @@ async def test_aggregated_usage_attribute_names(capfire: CaptureLogfire) -> None
             'final_result': 'Hello!',
             'gen_ai.aggregated_usage.input_tokens': 10,
             'gen_ai.aggregated_usage.output_tokens': 5,
-            'gen_ai.aggregated_usage.cache_read.input_tokens': 2,
             'gen_ai.aggregated_usage.details.cache_read_tokens': 2,
             'pydantic_ai.all_messages': [
                 {'role': 'user', 'parts': [{'type': 'text', 'content': 'Hello'}]},

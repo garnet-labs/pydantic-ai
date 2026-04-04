@@ -368,6 +368,7 @@ class Tool(Generic[ToolAgentDepsT]):
     strict: bool | None
     sequential: bool
     requires_approval: bool
+    background: bool
     metadata: dict[str, Any] | None
     timeout: float | None
     defer_loading: bool
@@ -395,6 +396,7 @@ class Tool(Generic[ToolAgentDepsT]):
         strict: bool | None = None,
         sequential: bool = False,
         requires_approval: bool = False,
+        background: bool = False,
         metadata: dict[str, Any] | None = None,
         timeout: float | None = None,
         defer_loading: bool = False,
@@ -460,6 +462,9 @@ class Tool(Generic[ToolAgentDepsT]):
             sequential: Whether the function requires a sequential/serial execution environment. Defaults to False.
             requires_approval: Whether this tool requires human-in-the-loop approval. Defaults to False.
                 See the [tools documentation](../deferred-tools.md#human-in-the-loop-tool-approval) for more info.
+            background: Whether this tool runs in the background. Defaults to False.
+                When True, the tool executes asynchronously and the agent continues working.
+                The result is delivered as a follow-up message when the task completes.
             metadata: Optional metadata for the tool. This is not sent to the model but can be used for filtering and tool behavior customization.
             timeout: Timeout in seconds for tool execution. If the tool takes longer, a retry prompt is returned to the model.
                 Defaults to None (no timeout).
@@ -489,6 +494,7 @@ class Tool(Generic[ToolAgentDepsT]):
         self.strict = strict
         self.sequential = sequential
         self.requires_approval = requires_approval
+        self.background = background
         self.metadata = metadata
         self.timeout = timeout
         self.defer_loading = defer_loading
@@ -565,6 +571,7 @@ class Tool(Generic[ToolAgentDepsT]):
             return_schema=self.function_schema.return_schema,
             include_return_schema=self.include_return_schema,
             function_signature=self.function_schema.function_signature,
+            background=self.background,
         )
 
     async def prepare_tool_def(self, ctx: RunContext[ToolAgentDepsT]) -> ToolDefinition | None:
@@ -674,6 +681,7 @@ class ToolDefinition:
     removed and this function tool stays.
     """
 
+<<<<<<< HEAD
     return_schema: ObjectJsonSchema | None = None
     """The JSON schema for the tool's return value.
 
@@ -715,6 +723,14 @@ class ToolDefinition:
         """
         assert self.function_signature is not None, 'function_signature is not available for output tools'
         return self.function_signature.render(body, name=self.name, description=self.description, **kwargs)
+
+    background: bool = False
+    """Whether this tool runs in the background.
+
+    When `True`, the tool is executed asynchronously in a background task. The agent receives
+    an immediate acknowledgment and continues working. The real result is delivered automatically
+    as a follow-up message when the task completes.
+    """
 
     @property
     def defer(self) -> bool:
