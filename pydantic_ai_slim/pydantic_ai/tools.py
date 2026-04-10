@@ -681,7 +681,6 @@ class ToolDefinition:
     removed and this function tool stays.
     """
 
-<<<<<<< HEAD
     return_schema: ObjectJsonSchema | None = None
     """The JSON schema for the tool's return value.
 
