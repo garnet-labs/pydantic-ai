@@ -706,6 +706,14 @@ class ToolDefinition:
     via `sig.render(body, name=td.name, description=td.description)`.
     """
 
+    background: bool = False
+    """Whether this tool runs in the background.
+
+    When `True`, the tool is executed asynchronously in a background task. The agent receives
+    an immediate acknowledgment and continues working. The real result is delivered automatically
+    as a follow-up message when the task completes.
+    """
+
     def __post_init__(self) -> None:
         if self.function_signature is None and self.kind != 'output':
             self.function_signature = FunctionSignature.from_schema(
@@ -722,14 +730,6 @@ class ToolDefinition:
         """
         assert self.function_signature is not None, 'function_signature is not available for output tools'
         return self.function_signature.render(body, name=self.name, description=self.description, **kwargs)
-
-    background: bool = False
-    """Whether this tool runs in the background.
-
-    When `True`, the tool is executed asynchronously in a background task. The agent receives
-    an immediate acknowledgment and continues working. The real result is delivered automatically
-    as a follow-up message when the task completes.
-    """
 
     @property
     def defer(self) -> bool:

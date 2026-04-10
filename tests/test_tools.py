@@ -980,9 +980,11 @@ def test_return_unknown():
     class Foobar:
         pass
 
-    @agent.tool_plain
-    def return_pydantic_model() -> Foobar:
-        return Foobar()
+    with pytest.warns(UserWarning, match='Could not generate return schema'):
+
+        @agent.tool_plain
+        def return_pydantic_model() -> Foobar:
+            return Foobar()
 
     with pytest.raises(PydanticSerializationError, match='Unable to serialize unknown type:'):
         agent.run_sync('')
